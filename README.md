@@ -21,5 +21,5 @@ hooks:
 ```
 cd /var/discourse
 sudo git pull
-./launcher rebuild app
+sudo /var/discourse/launcher rebuild app
 ```
