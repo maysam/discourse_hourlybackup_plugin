@@ -1,5 +1,6 @@
+
 module Jobs
-  class HourlyBackup < ::Jobs::Scheduled
+  class HourlyBackup < Jobs::Scheduled
     every 5.minutes 
     sidekiq_options retry: false
 
