@@ -5,7 +5,7 @@ module HourlyBackup
 
     def execute(args)
       return unless SiteSetting.backup_daily?
-      Jobs.enqueue_in(rand(10.seconds), :create_daily_backup)
+      Jobs.enqueue_in(rand(10), :create_daily_backup)
     end
   end
 end

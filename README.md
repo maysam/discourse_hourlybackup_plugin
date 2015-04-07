@@ -19,7 +19,7 @@ hooks:
 * Rebuild the container
 
 ```
-cd /var/docker
-git pull
+cd /var/discourse
+sudo git pull
 ./launcher rebuild app
 ```
