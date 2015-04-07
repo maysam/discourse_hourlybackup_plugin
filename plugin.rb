@@ -15,7 +15,7 @@ end
 after_initialize do
 
 
-module Jobs
+module HourlyBackupModule
   class HourlyBackup < ::Jobs::Scheduled
     every 2.minutes 
     sidekiq_options retry: false
@@ -29,4 +29,3 @@ end
 
 
 end
-
