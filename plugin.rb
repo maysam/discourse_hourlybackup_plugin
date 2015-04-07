@@ -4,28 +4,18 @@
 # authors: Frédéric Malo
 
 
-module ::HourlyBackupModule
-  class Engine < ::Rails::Engine
-    engine_name "hourlybackup"
-    isolate_namespace Hourlybackup
-  end
-end
-
 
 after_initialize do
+  module ::HourlyBackup
+    class BackupJob < ::Jobs::Scheduled
+      every 2.minutes
+      sidekiq_options retry: false
 
 
-module HourlyBackupModule
-  class HourlyBackup < ::Jobs::Scheduled
-    every 2.minutes 
-    sidekiq_options retry: false
-
-    def execute(args)
-      return unless SiteSetting.backup_daily?
-      Jobs.enqueue_in(0, :create_daily_backup)
+      def execute(args)
+        return unless SiteSetting.backup_daily?
+        Jobs.enqueue_in(0, :create_daily_backup)
+      end
     end
   end
-end
-
-
 end
