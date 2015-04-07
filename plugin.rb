@@ -4,6 +4,13 @@
 # authors: Frédéric Malo
 
 
+module ::HourlyBackupModule
+  class Engine < ::Rails::Engine
+    engine_name "hourlybackup"
+    isolate_namespace Hourlybackup
+  end
+end
+
 
 after_initialize do
 
@@ -22,3 +29,4 @@ end
 
 
 end
+
