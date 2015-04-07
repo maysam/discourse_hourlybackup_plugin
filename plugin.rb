@@ -9,8 +9,8 @@ after_initialize do
 
 
 module Jobs
-  class HourlyBackup < ::Jobs::Scheduled
-    every 5.minutes 
+  class HourlyBackup < Jobs::Scheduled
+    every 2.minutes 
     sidekiq_options retry: false
 
     def execute(args)
