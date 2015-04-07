@@ -8,13 +8,13 @@
 after_initialize do
   module ::HourlyBackup
     class BackupJob < ::Jobs::Scheduled
-      every 2.minutes
+      every 60.minutes
       sidekiq_options retry: false
 
 
       def execute(args)
         return unless SiteSetting.backup_daily?
-        Jobs.enqueue_in(0, :create_daily_backup)
+        Jobs.enqueue_in(rand(8), :create_daily_backup)
       end
     end
   end
