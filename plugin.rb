@@ -1,6 +1,6 @@
-module HourlyBackup
+module Jobs
   class HourlyBackup < ::Jobs::Scheduled
-    every 5.minutes # just a test
+    every 5.minutes 
     sidekiq_options retry: false
 
     def execute(args)
