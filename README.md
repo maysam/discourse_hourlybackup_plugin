@@ -1,5 +1,7 @@
-# Discourse Hourly Backup Plugin
-Schedule backup every hour on fabulous Discourse.org framework
+# Discourse Hourly Backup Plugin ONLY IF something has changed
+Schedule task every hour on fabulous Discourse.org platform : complete backup ONLY IF something has changed since an hour. 
+
+Something = [User, Post, Topic]
 
 
 ## Installation
@@ -19,7 +21,5 @@ hooks:
 * Rebuild the container
 
 ```
-cd /var/discourse
-sudo git pull
 sudo /var/discourse/launcher rebuild app
 ```
