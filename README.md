@@ -5,7 +5,9 @@ Something = [User, Post, Topic]
 
 ## Thanks
 
-Many thanks to Régis Hanol for his help ! https://meta.discourse.org/t/hourly-backup-only-if-something-has-changed/27274
+Many thanks to Régis Hanol for his help ! 
+
+https://meta.discourse.org/t/hourly-backup-only-if-something-has-changed/27274
 
 
 ## Installation
