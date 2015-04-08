@@ -3,6 +3,10 @@ Schedule task every hour on fabulous Discourse.org platform : complete backup ON
 
 Something = [User, Post, Topic]
 
+## Thanks
+
+Many thanks to Régis Hanol for his help ! https://meta.discourse.org/t/hourly-backup-only-if-something-has-changed/27274
+
 
 ## Installation
 
