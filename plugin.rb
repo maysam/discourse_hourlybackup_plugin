@@ -8,10 +8,10 @@
 after_initialize do
   module ::HourlyBackup
     class BackupJob < ::Jobs::Scheduled
-      every 2.minutes
+      every 1.minute
       sidekiq_options retry: false
 
-      def has_something_changed_since?(date=1.hour.ago)
+      def has_something_changed_since?(date=1.minute.ago)
         [User, Post, Topic].each do |klass|
           return true if klass.where("created_at >= :date OR updated_at >= :date", date: date).exists?
         end
