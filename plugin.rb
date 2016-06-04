@@ -1,27 +1,24 @@
-# name: Hourly Backup
-# about: Schedule hourly backup for Discourse
-# version: 0.2
-# authors: Frédéric Malo
+# name: Subscription Manager
+# about: manages subscriptions for discourse users
+# version: 0.1
+# authors: Maysam Torabi
 # Many thanks to Régis Hanol ! https://meta.discourse.org/t/hourly-backup-only-if-something-has-changed/27274/12
 
 
 after_initialize do
-  module ::HourlyBackup
-    class BackupJob < ::Jobs::Scheduled
+  module ::Subscription
+    class UnsubscribeJob < ::Jobs::Scheduled
       every 1.hour
       sidekiq_options retry: false
 
-      def has_something_changed_since?(date=1.hour.ago)
-        [User, Post, Topic].each do |klass|   
-          return true if klass.where("created_at >= :date OR updated_at >= :date", date: date).exists?
+      def unsubscribe_expired_users
+        User.all.find_each do |user| 
+          user.deactivate if user.custom_fields["user_field_1"] and user.custom_fields["user_field_1"].to_date < Time.now
         end
-        false
       end
 
       def execute(args)
-        #return unless SiteSetting.backup_daily?
-        return unless has_something_changed_since?
-        Jobs.enqueue_in(rand(4), :create_daily_backup) 
+        Jobs.enqueue_in(rand(4), :unsubscribe_expired_users) 
       end
     end
   end
