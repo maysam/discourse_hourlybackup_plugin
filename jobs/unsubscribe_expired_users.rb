@@ -6,12 +6,16 @@ module Jobs
     def execute(args)
       p "Unsubscribing Expired Users"
       User.all.find_each do |user|
-        if user.custom_fields["user_field_1"]
-          if user.custom_fields["user_field_1"].to_date < Time.now
-            user.deactivate
-          else
-            user.activate
+        begin
+          if user.custom_fields["user_field_1"]
+            if user.custom_fields["user_field_1"].to_date < Time.now
+              user.deactivate
+            else
+              user.activate
+            end
           end
+        rescue => e
+          p e.message
         end
       end
     end
