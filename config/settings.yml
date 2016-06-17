@@ -1,0 +1,4 @@
+plugins:
+  subscription_manager_enabled:
+    default: true
+    client: true

@@ -4,22 +4,136 @@
 # authors: Maysam Torabi
 # Many thanks to Régis Hanol ! https://meta.discourse.org/t/hourly-backup-only-if-something-has-changed/27274/12
 
+# enabled_site_setting :subscription_enabled
+
+add_admin_route 'subscription-manager.title', 'subscription-manager'
+
+Discourse::Application.routes.append do
+  get '/admin/plugins/subscription-manager' => 'admin/plugins#index', constraints: StaffConstraint.new
+end
+
+
+PLUGIN_NAME ||= "discourse_subscription_manager".freeze
+
+SUBSCRIPTION_MANAGER_CUSTOM_FIELD ||= "subscription-manager".freeze
+
+DATA_PREFIX ||= "data-subscription-manager-".freeze
 
 after_initialize do
-  module ::Subscription
-    class UnsubscribeJob < ::Jobs::Scheduled
-      every 1.hour
-      sidekiq_options retry: false
+  require_dependency File.expand_path('../jobs/sync_groups.rb', __FILE__)
+  require_dependency File.expand_path('../jobs/unsubscribe_expired_users.rb', __FILE__)
 
-      def unsubscribe_expired_users
-        User.all.find_each do |user| 
-          user.deactivate if user.custom_fields["user_field_1"] and user.custom_fields["user_field_1"].to_date < Time.now
-        end
-      end
+  Jobs.enqueue_in(rand(4), :sync_groups)
+  Jobs.enqueue_in(rand(4), :unsubscribe_expired_users)
 
-      def execute(args)
-        Jobs.enqueue_in(rand(4), :unsubscribe_expired_users) 
-      end
+  module ::DiscourseSubscriptionManager
+    class Engine < ::Rails::Engine
+      engine_name PLUGIN_NAME
+      isolate_namespace DiscourseSubscriptionManager
     end
+  end
+
+  require_dependency "application_controller"
+
+  class DiscourseSubscriptionManager::SubscriptionManagerController < ::ApplicationController
+    requires_plugin PLUGIN_NAME
+    skip_before_filter :check_xhr, :preload_json, :verify_authenticity_token
+
+    def subscribe
+      begin
+        status = params.require :status
+        email = params.require :email
+        first_name = params.require :first_name
+        last_name = params.require :last_name
+        product_id = params.require :prod
+        token = params.require :hottok
+        offer = params.require :off
+
+        unless user = User.find_by_email(email)
+          puts "Creating new account!"
+          user = User.new(email: email)
+          user.password = SecureRandom.hex
+          user.username = UserNameSuggester.suggest(user.email)
+
+          name_parts = []
+          name_parts << first_name if first_name
+          name_parts << last_name if last_name
+          user.name = name_parts.join ' '
+
+          user.active = true
+          user.save!
+
+          user.change_trust_level!(2)
+          user.email_tokens.update_all  confirmed: true
+
+          puts "Sending email!"
+          email_token = user.email_tokens.create(email: user.email)
+          Jobs.enqueue(user.email, type: :account_created, user_id: user.id, email_token: email_token.token)
+        else
+          user.activate
+        end
+
+        current_expiration_date = user.custom_fields["user_field_1"]
+        if current_expiration_date.nil?
+          current_expiration_date = Time.now
+        else
+          current_expiration_date = current_expiration_date.to_datetime
+        end
+
+        days_to_add = 0
+        groups_to_add_to = []
+
+        rules = YAML.load_file "rules.yml"
+        rules.each do |rule_part|
+          rule = rule_part.last
+          if rule['token'] == token or rule['token'] == "all"
+            if rule['product_id'] == product_id or rule['product_id'] == "all"
+              if rule['offer'] == offer or rule['offer'] == "all"
+                if status == "approved"
+                  days_to_add = rule['days']
+                elsif status == "refunded"
+                  days_to_add = -rule['days']
+                end
+                if status == 'approved' or status == 'refunded'
+                  groups_to_add_to = rule['group']
+                  groups_to_add_to = [groups_to_add_to] unless groups_to_add_to.is_a? Array
+                end
+                break
+              end
+            end
+          end
+        end
+
+        if days_to_add != 0
+          current_expiration_date += days_to_add.days
+          user.custom_fields["user_field_1"] = current_expiration_date
+          user.save
+
+          groups_to_add_to.each do |group_id|
+            group = Group.find group_id
+            return render_json_error group unless group && !group.automatic
+            if days_to_add > 0
+              group.users << user rescue ActiveRecord::RecordNotUnique
+            else
+              group.users.delete user
+            end
+          end
+        end
+
+        render json: {user: user, params: params, current_expiration_date: current_expiration_date, groups_to_add_to: groups_to_add_to}
+      rescue StandardError => e
+        render_json_error e.message
+      end
+
+    end
+  end
+
+  DiscourseSubscriptionManager::Engine.routes.draw do
+    get "/subscribe" => "subscription_manager#subscribe" # remove after testing
+    post "/subscribe" => "subscription_manager#subscribe"
+  end
+
+  Discourse::Application.routes.append do
+    mount ::DiscourseSubscriptionManager::Engine, at: "/subscription_manager"
   end
 end
