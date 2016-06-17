@@ -62,9 +62,9 @@ after_initialize do
 
         current_expiration_date = user.custom_fields["user_field_1"]
         if current_expiration_date.nil?
-          current_expiration_date = Time.now
+          current_expiration_date = Date.today
         else
-          current_expiration_date = current_expiration_date.to_datetime
+          current_expiration_date = current_expiration_date.to_date
         end
 
         days_to_add = 0
@@ -83,6 +83,7 @@ after_initialize do
                 end
                 if status == 'approved' or status == 'refunded'
                   groups_to_add_to = rule['group']
+                  groups_to_add_to = [] if groups_to_add_to.nil?
                   groups_to_add_to = [groups_to_add_to] unless groups_to_add_to.is_a? Array
                 end
                 break
@@ -93,7 +94,7 @@ after_initialize do
 
         if days_to_add != 0
           current_expiration_date += days_to_add.days
-          user.custom_fields["user_field_1"] = current_expiration_date
+          user.custom_fields["user_field_1"] = current_expiration_date.strftime("%d/%m/%Y")
           user.save
 
           groups_to_add_to.each do |group_id|
