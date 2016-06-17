@@ -4,20 +4,7 @@
 # authors: Maysam Torabi
 # Many thanks to Régis Hanol ! https://meta.discourse.org/t/hourly-backup-only-if-something-has-changed/27274/12
 
-# enabled_site_setting :subscription_enabled
-
-add_admin_route 'subscription-manager.title', 'subscription-manager'
-
-Discourse::Application.routes.append do
-  get '/admin/plugins/subscription-manager' => 'admin/plugins#index', constraints: StaffConstraint.new
-end
-
-
 PLUGIN_NAME ||= "discourse_subscription_manager".freeze
-
-SUBSCRIPTION_MANAGER_CUSTOM_FIELD ||= "subscription-manager".freeze
-
-DATA_PREFIX ||= "data-subscription-manager-".freeze
 
 after_initialize do
   require_dependency File.expand_path('../jobs/sync_groups.rb', __FILE__)
