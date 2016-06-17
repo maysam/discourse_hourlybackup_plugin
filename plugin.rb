@@ -55,7 +55,7 @@ after_initialize do
 
           puts "Sending email!"
           email_token = user.email_tokens.create(email: user.email)
-          Jobs.enqueue(user.email, type: :account_created, user_id: user.id, email_token: email_token.token)
+          Jobs.enqueue(:user_email, type: :account_created, user_id: user.id, email_token: email_token.token)
         else
           user.activate
         end
@@ -111,7 +111,6 @@ after_initialize do
       rescue StandardError => e
         render_json_error e.message
       end
-
     end
   end
 
