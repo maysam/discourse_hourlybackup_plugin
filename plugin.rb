@@ -41,7 +41,7 @@ after_initialize do
 
         _rule = nil
 
-        rules = YAML.load_file "rules.yml"
+        rules = YAML.load_file "public/uploads/rules.yml"
         rules.each do |rule_part|
           rule = rule_part.last
           if rule['token'] == token or rule['token'] == "all"

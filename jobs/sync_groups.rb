@@ -5,7 +5,7 @@ module Jobs
 
     def execute(args)
       puts "syncing groups to groups.json"
-      File.open("groups.json", 'w') { |file| p file; file.write JSON.pretty_generate Group.pluck(:id, :name) }
+      File.open("public/uploads/groups.json", 'w') { |file| p file; file.write JSON.pretty_generate Group.pluck(:id, :name) }
     end
   end
 end
