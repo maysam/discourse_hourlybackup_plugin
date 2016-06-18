@@ -80,7 +80,6 @@ after_initialize do
               user.active = true
               user.save!
 
-              user.change_trust_level!(2)
               user.email_tokens.update_all  confirmed: true
 
               puts "Sending email!"
