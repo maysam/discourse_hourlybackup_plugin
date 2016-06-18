@@ -44,9 +44,9 @@ after_initialize do
         rules = YAML.load_file "public/uploads/rules.yml"
         rules.each do |rule_part|
           rule = rule_part.last
-          if rule['token'] == token or rule['token'] == "all"
-            if rule['product_id'] == product_id or rule['product_id'] == "all"
-              if rule['offer'] == offer or rule['offer'] == "all"
+          if rule['token'].to_s == token or rule['token'].to_s == "all"
+            if rule['product_id'].to_s == product_id or rule['product_id'].to_s == "all"
+              if rule['offer'].to_s == offer or rule['offer'].to_s == "all"
                 if status == "approved"
                   days_to_add = rule['days']
                 elsif status == "refunded"
@@ -76,6 +76,9 @@ after_initialize do
               name_parts << first_name if first_name
               name_parts << last_name if last_name
               user.name = name_parts.join ' '
+
+              user.active = true
+              user.save!
 
               user.change_trust_level!(2)
               user.email_tokens.update_all  confirmed: true
@@ -121,7 +124,6 @@ after_initialize do
   end
 
   DiscourseSubscriptionManager::Engine.routes.draw do
-    get "/subscribe" => "subscription_manager#subscribe" # remove after testing
     post "/subscribe" => "subscription_manager#subscribe"
   end
 
