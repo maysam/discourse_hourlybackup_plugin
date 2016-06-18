@@ -36,39 +36,10 @@ after_initialize do
         token = params.require :hottok
         offer = params.require :off
 
-        unless user = User.find_by_email(email)
-          puts "Creating new account!"
-          user = User.new(email: email)
-          user.password = SecureRandom.hex
-          user.username = UserNameSuggester.suggest(user.email)
-
-          name_parts = []
-          name_parts << first_name if first_name
-          name_parts << last_name if last_name
-          user.name = name_parts.join ' '
-
-          user.active = true
-          user.save!
-
-          user.change_trust_level!(2)
-          user.email_tokens.update_all  confirmed: true
-
-          puts "Sending email!"
-          email_token = user.email_tokens.create(email: user.email)
-          Jobs.enqueue(:user_email, type: :account_created, user_id: user.id, email_token: email_token.token)
-        else
-          user.activate
-        end
-
-        current_expiration_date = user.custom_fields["user_field_1"]
-        if current_expiration_date.nil?
-          current_expiration_date = Date.today
-        else
-          current_expiration_date = current_expiration_date.to_date
-        end
-
         days_to_add = 0
         groups_to_add_to = []
+
+        _rule = nil
 
         rules = YAML.load_file "rules.yml"
         rules.each do |rule_part|
@@ -86,6 +57,7 @@ after_initialize do
                   groups_to_add_to = [] if groups_to_add_to.nil?
                   groups_to_add_to = [groups_to_add_to] unless groups_to_add_to.is_a? Array
                 end
+                _rule = rule
                 break
               end
             end
@@ -93,22 +65,55 @@ after_initialize do
         end
 
         if days_to_add != 0
-          current_expiration_date += days_to_add.days
-          user.custom_fields["user_field_1"] = current_expiration_date.strftime("%d/%m/%Y")
-          user.save
-
-          groups_to_add_to.each do |group_id|
-            group = Group.find group_id
-            return render_json_error group unless group && !group.automatic
+          unless user = User.find_by_email(email)
             if days_to_add > 0
-              group.users << user rescue ActiveRecord::RecordNotUnique
+              puts "Creating new account!"
+              user = User.new(email: email)
+              user.password = SecureRandom.hex
+              user.username = UserNameSuggester.suggest(user.email)
+
+              name_parts = []
+              name_parts << first_name if first_name
+              name_parts << last_name if last_name
+              user.name = name_parts.join ' '
+
+              user.change_trust_level!(2)
+              user.email_tokens.update_all  confirmed: true
+
+              puts "Sending email!"
+              email_token = user.email_tokens.create(email: user.email)
+              Jobs.enqueue(:user_email, type: :account_created, user_id: user.id, email_token: email_token.token)
+            end
+          end
+
+          if days_to_add > 0
+            user.activate
+          end
+
+          if user
+            current_expiration_date = user.custom_fields["user_field_1"]
+            if current_expiration_date.nil?
+              current_expiration_date = Date.today
             else
-              group.users.delete user
+              current_expiration_date = current_expiration_date.to_date
+            end
+            current_expiration_date += days_to_add.days
+            user.custom_fields["user_field_1"] = current_expiration_date.strftime("%d/%m/%Y")
+            user.save
+
+            groups_to_add_to.each do |group_id|
+              group = Group.find group_id
+              return render_json_error group unless group && !group.automatic
+              if days_to_add > 0
+                group.users << user rescue ActiveRecord::RecordNotUnique
+              else
+                group.users.delete user
+              end
             end
           end
         end
 
-        render json: {user: user, params: params, current_expiration_date: current_expiration_date, groups_to_add_to: groups_to_add_to}
+        render json: {rule: _rule, user: user, params: params, current_expiration_date: current_expiration_date, groups_to_add_to: groups_to_add_to}
       rescue StandardError => e
         render_json_error e.message
       end
