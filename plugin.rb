@@ -38,7 +38,7 @@ after_initialize do
 
         days_to_add = 0
         groups_to_add_to = []
-
+        send_email = false
         _rule = nil
 
         rules = YAML.load_file "public/uploads/rules.yml"
@@ -65,8 +65,10 @@ after_initialize do
         end
 
         if days_to_add != 0
-          unless user = User.find_by_email(email)
-            if days_to_add > 0
+          if days_to_add > 0
+            if user = User.find_by_email(email)
+              user.activate
+            else
               puts "Creating new account!"
               user = User.new(email: email)
               user.password = SecureRandom.hex
@@ -82,14 +84,8 @@ after_initialize do
 
               user.email_tokens.update_all  confirmed: true
 
-              puts "Sending email!"
-              email_token = user.email_tokens.create(email: user.email)
-              Jobs.enqueue(:user_email, type: :account_created, user_id: user.id, email_token: email_token.token)
+              send_email = true
             end
-          end
-
-          if days_to_add > 0
-            user.activate
           end
 
           if user
@@ -111,6 +107,12 @@ after_initialize do
               else
                 group.users.delete user
               end
+            end
+
+            if send_email
+              puts "Sending email!"
+              email_token = user.email_tokens.create email: user.email
+              Jobs.enqueue :user_email, type: :account_created, user_id: user.id, email_token: email_token.token
             end
           end
         end
