@@ -15,6 +15,11 @@ Then I believe the best place to show a menu for it inside Discourse is either o
 
 I believe we can change to fit in one of these places. But if perhaps it's mandatory that it only shows inside the "Plugins" menu inside "Settings", then it's ok too. I prefer a separate menu for it, but it doesn't really matter.
 
+- Deployment
+
+put rules.yml in shared/standalone/uploads
+read groups.json from shared/standalone/uploads
+make sure to create the first custom field to be for the expiration date, label doesnt matter
 
 ➠ HOW IT SHOULD WORK
 
@@ -42,7 +47,7 @@ Within this URL, it will gather the data I specified above and manager the user 
 	- If the status sent is "refunded" then remove access from the user (based on its email) WITHOUT deleting the user (as to not delete his posts);
 
 When creating new users, use the following as a rule:
-	
+
 	- Use the first part of the email as their username. So if the email is "bruno123@gmail.com", the username will be "bruno123";
 	- If the user already exists, then just add a "1" at the end of it. In this example, the second user with the same email would be "bruno1231"
 
