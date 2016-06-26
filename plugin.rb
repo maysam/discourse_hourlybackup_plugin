@@ -67,6 +67,8 @@ after_initialize do
         if days_to_add != 0
           if days_to_add > 0
             if user = User.find_by_email(email)
+              user.suspended_till = nil
+              user.suspended_at = nil
               user.activate
             else
               puts "Creating new account!"
@@ -79,8 +81,7 @@ after_initialize do
               name_parts << last_name if last_name
               user.name = name_parts.join ' '
 
-              user.active = true
-              user.save!
+              user.activate
 
               user.email_tokens.update_all  confirmed: true
 
