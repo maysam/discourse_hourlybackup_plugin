@@ -67,8 +67,6 @@ after_initialize do
         if days_to_add != 0
           if days_to_add > 0
             if user = User.find_by_email(email)
-              user.suspended_till = nil
-              user.suspended_at = nil
               user.activate
             else
               puts "Creating new account!"
@@ -98,6 +96,17 @@ after_initialize do
             end
             current_expiration_date += days_to_add.days
             user.custom_fields["user_field_1"] = current_expiration_date.strftime("%d/%m/%Y")
+            if current_expiration_date < Time.now
+              user.suspended_till = 100.years.from_now
+              user.suspended_at = DateTime.now
+              user.revoke_api_key
+              StaffActionLogger.new(user).log_user_suspend(user, 'Seu tempo de acesso expirou. Por favor renove sua assinatura.')
+              MessageBus.publish "/logout", user.id, user_ids: [user.id]
+            else
+              user.suspended_till = nil
+              user.suspended_at = nil
+              StaffActionLogger.new(user).log_user_unsuspend(user)
+            end
             user.save
 
             groups_to_add_to.each do |group_id|
