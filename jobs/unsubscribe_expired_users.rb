@@ -13,7 +13,7 @@ module Jobs
               user.suspended_at = DateTime.now
               user.save!
               user.revoke_api_key
-              StaffActionLogger.new(user).log_user_suspend(user, 'Subscription Expired!')
+              StaffActionLogger.new(user).log_user_suspend(user, 'Seu tempo de acesso expirou. Por favor renove sua assinatura.')
               MessageBus.publish "/logout", user.id, user_ids: [user.id]
             end
           end
