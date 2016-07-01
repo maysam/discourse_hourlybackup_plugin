@@ -65,26 +65,24 @@ after_initialize do
         end
 
         if days_to_add != 0
-          if days_to_add > 0
-            if user = User.find_by_email(email)
-              user.activate
-            else
-              puts "Creating new account!"
-              user = User.new(email: email)
-              user.password = SecureRandom.hex
-              user.username = UserNameSuggester.suggest(user.email)
+          if user = User.find_by_email(email)
+            user.activate
+          elsif days_to_add > 0
+            puts "Creating new account!"
+            user = User.new(email: email)
+            user.password = SecureRandom.hex
+            user.username = UserNameSuggester.suggest(user.email)
 
-              name_parts = []
-              name_parts << first_name if first_name
-              name_parts << last_name if last_name
-              user.name = name_parts.join ' '
+            name_parts = []
+            name_parts << first_name if first_name
+            name_parts << last_name if last_name
+            user.name = name_parts.join ' '
 
-              user.activate
+            user.activate
 
-              user.email_tokens.update_all  confirmed: true
+            user.email_tokens.update_all  confirmed: true
 
-              send_email = true
-            end
+            send_email = true
           end
 
           if user
