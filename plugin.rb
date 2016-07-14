@@ -45,8 +45,8 @@ after_initialize do
         rules.each do |rule_part|
           rule = rule_part.last
           if rule['token'].to_s == token or rule['token'].to_s == "all"
-            if rule['product_id'].to_s == product_id or rule['product_id'].to_s == "all"
-              if rule['offer'].to_s == offer or rule['offer'].to_s == "all"
+            if rule['product_id'].to_s == product_id or rule['product_id'].to_s == "all" or (rule['product_id'].is_a? Array and rule['product_id'].include? product_id)
+              if rule['offer'].to_s == offer or rule['offer'].to_s == "all" or (rule['offer'].is_a? Array and rule['offer'].include? offer)
                 if status == "approved"
                   days_to_add = rule['days']
                 elsif status == "refunded"
