@@ -44,7 +44,7 @@ after_initialize do
         rules = YAML.load_file "public/uploads/rules.yml"
         rules.each do |rule_part|
           rule = rule_part.last
-          if rule['token'].to_s == token or rule['token'].to_s == "all"
+          if rule['token'].to_s == token or rule['token'].to_s == "all" or (rule['token'].is_a? Array and rule['token'].include? token)
             if rule['product_id'].to_s == product_id or rule['product_id'].to_s == "all" or (rule['product_id'].is_a? Array and rule['product_id'].include? product_id)
               if rule['offer'].to_s == offer or rule['offer'].to_s == "all" or (rule['offer'].is_a? Array and rule['offer'].include? offer)
                 if status == "approved"
