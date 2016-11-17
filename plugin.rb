@@ -30,8 +30,9 @@ after_initialize do
       begin
         status = params.require :status
         email = params.require :email
-        first_name = params.require :first_name
-        last_name = params.require :last_name
+        # first_name = params.require :first_name
+        # last_name = params.require :last_name
+        complete_name = params.require :name
         product_id = params.require :prod
         token = params.require :hottok
         offer = params.require :off
@@ -73,10 +74,11 @@ after_initialize do
             user.password = SecureRandom.hex
             user.username = UserNameSuggester.suggest(user.email)
 
-            name_parts = []
-            name_parts << first_name if first_name
-            name_parts << last_name if last_name
-            user.name = name_parts.join ' '
+            # name_parts = []
+            # name_parts << first_name if first_name
+            # name_parts << last_name if last_name
+            # user.name = name_parts.join ' '
+            user.name = complete_name.titlecase
 
             user.activate
 
