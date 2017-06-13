@@ -93,6 +93,9 @@ after_initialize do
               current_expiration_date = Date.today
             else
               current_expiration_date = current_expiration_date.to_date
+              if current_expiration_date < Date.today
+                current_expiration_date = Date.today
+              end
             end
             current_expiration_date += days_to_add.days
             user.custom_fields["user_field_1"] = current_expiration_date.strftime("%d/%m/%Y")
