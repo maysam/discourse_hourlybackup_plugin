@@ -24,7 +24,7 @@ after_initialize do
 
   class DiscourseSubscriptionManager::SubscriptionManagerController < ::ApplicationController
     requires_plugin PLUGIN_NAME
-    skip_before_filter :check_xhr, :preload_json, :verify_authenticity_token, :redirect_to_login_if_required
+    skip_before_action :check_xhr, :preload_json, :verify_authenticity_token, :redirect_to_login_if_required
 
     def subscribe
       begin
